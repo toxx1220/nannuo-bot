@@ -28,7 +28,17 @@
 
               echo "🤖 Nannuo Bot Dev Environment"
               echo "Java: ${jdk.version}"
-              echo "Gradle: $(gradle --version | grep Gradle | head -n 1)"
+              
+              # Auto-update Gradle Wrapper to match Nix version
+              GRADLE_VERSION="${pkgs.gradle_9.version}"
+              WRAPPER_PROPS="gradle/wrapper/gradle-wrapper.properties"
+              
+              if [ ! -f "$WRAPPER_PROPS" ] || ! grep -q "gradle-$GRADLE_VERSION-bin.zip" "$WRAPPER_PROPS"; then
+                echo "🔄 Updating Gradle Wrapper to $GRADLE_VERSION..."
+                gradle wrapper --gradle-version "$GRADLE_VERSION"
+              else
+                echo "✅ Gradle Wrapper is up to date ($GRADLE_VERSION)"
+              fi
             '';
           };
         };
