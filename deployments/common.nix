@@ -1,23 +1,76 @@
-{ config, pkgs, lib, ... }: {
-  description = "Provider Agnostic Configuration";
-
-  nix.settings = {
-    cores = 1;
-    max-jobs = 1;
-    auto-optimise-store = true;
-    experimental-features = [ "nix-command" "flakes" ];
+{ config, pkgs, lib, ... }:
+# ============================================================================
+# Common Configuration - Provider Agnostic
+# ============================================================================
+let
+  user = "nannuo";
+  sshPort = 6969;
+in {
+  nix = {
+    settings = {
+      cores = 1;
+      max-jobs = 1;
+      auto-optimise-store = true;
+      experimental-features = [ "nix-command" "flakes" ];
+    };
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 8d";
+    };
   };
+
+  users.users.${user} = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "sudo" "docker" ]; # Enable ‘sudo’ for the user.
+    packages = with pkgs; [ ];
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4j93LcS5wmBII8I+9A7m1hg/OTa0GMuB2HHDuCAOpy nobehm@gmail.com"
+    ];
+  };
+
+  environment.systemPackages = with pkgs; [ micro btop tree age sops ];
+
+  time.timeZone = "Europe/Berlin";
 
   # When low on memory
   boot.tmp.cleanOnBoot = true;
   zramSwap.enable = true;
   zramSwap.memoryPercent = 50;
-  swapDevices = [ {
+
+  swapDevices = [{
     device = "/var/lib/swapfile";
     size = 2048;
   }];
 
-  services.openssh.enable = true;
+  networking = {
+    networkmanager.enable = true;
+    firewall.allowedTCPPorts = [ 80 443 sshPort ];
+  };
+
+  services.openssh = {
+    enable = true;
+    ports = [ sshPort ];
+    settings = {
+      AllowUsers = [ user ];
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      UsePAM = false;
+    };
+    extraConfig = ''
+      ClientAliveInterval 3600
+      ClientAliveCountMax 3
+      	'';
+    banner = ''
+
+         ____  ____ _____  ____  __  ______
+        / __ \/ __ `/ __ \/ __ \/ / / / __ \
+       / / / / /_/ / / / / / / / /_/ / /_/ /
+      /_/ /_/\__,_/_/ /_/_/ /_/\__,_/\____/
+
+        	'';
+  };
 
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4j93LcS5wmBII8I+9A7m1hg/OTa0GMuB2HHDuCAOpy nobehm@gmail.com"
@@ -28,4 +81,33 @@
   ];
 
   system.stateVersion = "23.11";
+
+  # ============================================================================
+  # SOPS Secrets Management
+  # ============================================================================
+
+  sops.defaultSopsFile = ./secrets.yaml;
+  sops.defaultSopsFormat = "yaml";
+
+  # Use the server's SSH host key to decrypt secrets at runtime
+  # This means you don't need to manually copy keys to the server,
+  # just add the server's public SSH key (converted to age) to .sops.yaml
+  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+
+  sops.secrets.discord_token = {
+    owner = "nannuo"; # Ensure the bot user can read it
+    # Optional: Restart the service if the token changes
+    # restartUnits = [ "nannuo-bot.service" ];
+  };
+
+  # ============================================================================
+  # Nannuo Bot Service
+  # ============================================================================
+
+  services.nannuo-bot = {
+    enable = true;
+    jarPath = "/var/lib/nannuo-bot/server.jar";
+    # Point to the decrypted secret path managed by SOPS
+    tokenFile = config.sops.secrets.discord_token.path;
+  };
 }
