@@ -9,12 +9,24 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nannuo-bot.url = "github:toxx1220/nannuo-bot";
+    nannuo-bot.url = "path:../";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-parts, nannuo-bot, sops-nix, disko, ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      nannuo-bot,
+      sops-nix,
+      disko,
+      ...
+    }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
       flake = {
         nixosConfigurations = {
           # 1. Google Cloud (x86_64)
