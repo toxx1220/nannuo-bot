@@ -6,5 +6,6 @@ out
 .DS_Store
 .env
 .jdk
+.pre-commit-config.yaml
 
 deployments/keys/

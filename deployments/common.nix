@@ -1,17 +1,24 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 # ============================================================================
 # Common Configuration - Provider Agnostic
 # ============================================================================
 let
   user = "toxx";
   sshPort = 22;
-in {
+in
+{
   nix = {
     settings = {
-      cores = 1;
-      max-jobs = 1;
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
     };
     gc = {
       automatic = true;
@@ -22,20 +29,30 @@ in {
 
   users.users.${user} = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "sudo" "docker" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [
+      "wheel"
+      "sudo"
+      "docker"
+    ]; # Enable ‘sudo’ for the user.
     packages = with pkgs; [ ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4j93LcS5wmBII8I+9A7m1hg/OTa0GMuB2HHDuCAOpy nobehm@gmail.com"
     ];
   };
 
-  nix.settings = { # Use binary cache to avoid cross-compilation build errors
-      substituters = [ "https://mic92.cachix.org" ];
-      trusted-public-keys =
-        [ "mic92.cachix.org-1:gi8IhgiT3CYZnJsaW7fxznzTkMUOn1RY4GmXdT/nXYQ=" ];
-    };
+  nix.settings = {
+    # Use binary cache to avoid cross-compilation build errors
+    substituters = [ "https://mic92.cachix.org" ];
+    trusted-public-keys = [ "mic92.cachix.org-1:gi8IhgiT3CYZnJsaW7fxznzTkMUOn1RY4GmXdT/nXYQ=" ];
+  };
 
-  environment.systemPackages = with pkgs; [ micro btop tree age sops ];
+  environment.systemPackages = with pkgs; [
+    micro
+    btop
+    tree
+    age
+    sops
+  ];
 
   time.timeZone = "Europe/Berlin";
 
@@ -43,7 +60,11 @@ in {
 
   networking = {
     networkmanager.enable = true;
-    firewall.allowedTCPPorts = [ 80 443 sshPort ];
+    firewall.allowedTCPPorts = [
+      80
+      443
+      sshPort
+    ];
   };
 
   services.openssh = {
@@ -107,5 +128,10 @@ in {
     jarPath = "/var/lib/nannuo-bot/server.jar";
     # Point to the decrypted secret path managed by SOPS
     tokenFile = config.sops.secrets.discord_token.path;
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "10s";
+      MemoryMax = "650M";
+    };
   };
 }

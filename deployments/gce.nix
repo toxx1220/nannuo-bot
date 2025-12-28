@@ -1,5 +1,12 @@
-{ config, pkgs, lib, modulesPath, ... }: {
- # GCE specific configuration
+{
+  config,
+  pkgs,
+  lib,
+  modulesPath,
+  ...
+}:
+{
+  # GCE specific configuration
 
   imports = [
     ./gce_disk-config.nix
@@ -12,6 +19,26 @@
     device = lib.mkForce "nodev";
     efiSupport = true;
     efiInstallAsRemovable = true;
+  };
+
+  documentation = {
+    enable = false;
+    man.enable = false;
+    nixos.enable = false;
+  };
+
+  nix = {
+    settings = {
+      cores = 1;
+      max-jobs = 1;
+      auto-optimise-store = lib.mkForce false; # Override due to low memory on gce instance
+    };
+  };
+
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50; # Use up to 50% of RAM for compressed swap
+    priority = 100; # Higher priority than disk swap
   };
 
   # Networking (GCE Specific Hostname/Domain)
