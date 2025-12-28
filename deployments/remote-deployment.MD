@@ -6,11 +6,11 @@ Deployment of the VPS happen via:
 Necessary to deploy:
 `deployments/keys/etc/ssh` -> host-key & host-key.pub (ssh server keys)
 
-Deploy command:
+Deploy command (needs to be run from `/deployments`):
 ```bash
-nix run github:nix-community/nixos-anywhere --
---flake .#gce-x86
---extra-files keys
+nix run github:nix-community/nixos-anywhere -- \
+--flake .#gce-x86 \
+--extra-files keys \
 root@[host-ip]
 ```
 
