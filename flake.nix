@@ -4,17 +4,47 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    git-hooks-nix.url = "github:cachix/git-hooks.nix";
+    git-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-parts }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      ...
+    }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      imports = [
+        inputs.git-hooks-nix.flakeModule
+      ];
 
-      perSystem = { config, self', inputs', pkgs, ... }:
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+
+      perSystem =
+        {
+          config,
+          self',
+          inputs',
+          pkgs,
+          ...
+        }:
         let
           jdk = pkgs.jdk25;
         in
         {
+          formatter = pkgs.nixfmt-rfc-style;
+
+          pre-commit.settings.hooks = {
+            nixfmt-rfc-style.enable = true;
+          };
+
           devShells.default = pkgs.mkShell {
             buildInputs = [
               jdk
@@ -22,17 +52,19 @@
             ];
 
             shellHook = ''
+              # Install the pre-commit hooks
+              ${config.pre-commit.installationScript}
+
               export JAVA_HOME=${jdk}
               # For IntelliJ to pick up the JDK path easily if needed
               export GRADLE_OPTS="-Dorg.gradle.java.home=${jdk}"
 
               echo "🤖 Nannuo Bot Dev Environment"
               echo "Java: ${jdk.version}"
-              
-              # Auto-update Gradle Wrapper to match Nix version
+
               GRADLE_VERSION="${pkgs.gradle_9.version}"
               WRAPPER_PROPS="gradle/wrapper/gradle-wrapper.properties"
-              
+
               if [ ! -f "$WRAPPER_PROPS" ] || ! grep -q "gradle-$GRADLE_VERSION-bin.zip" "$WRAPPER_PROPS"; then
                 echo "🔄 Updating Gradle Wrapper to $GRADLE_VERSION..."
                 gradle wrapper --gradle-version "$GRADLE_VERSION"
@@ -44,11 +76,18 @@
         };
 
       flake = {
-        nixosModules.default = { config, lib, pkgs, ... }:
+        nixosModules.default =
+          {
+            config,
+            lib,
+            pkgs,
+            ...
+          }:
           let
             cfg = config.services.nannuo-bot;
             jdk = pkgs.jdk25;
-          in {
+          in
+          {
             options.services.nannuo-bot = {
               enable = lib.mkEnableOption "Nannuo Bot Service";
 
@@ -72,9 +111,8 @@
                 home = "/var/lib/nannuo-bot";
                 createHome = true;
               };
-              users.groups.nannuo = {};
+              users.groups.nannuo = { };
 
-              # Systemd Service
               systemd.services.nannuo-bot = {
                 description = "Nannuo Discord Bot";
                 after = [ "network.target" ];
@@ -89,7 +127,6 @@
 
                   ExecStart = "${jdk}/bin/java -jar ${cfg.jarPath}";
 
-                  # Restart policy
                   Restart = "always";
                   RestartSec = "10s";
                 };
