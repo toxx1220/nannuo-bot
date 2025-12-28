@@ -29,6 +29,7 @@
         { config, pkgs, ... }:
         let
           jdk = pkgs.jdk25;
+          javaRuntime = pkgs.jdk25_headless;
         in
         {
           formatter = pkgs.nixfmt-rfc-style;
@@ -74,7 +75,7 @@
           }:
           let
             cfg = config.services.nannuo-bot;
-            jdk = pkgs.jdk25;
+            javaRuntime = pkgs.jdk25_headless;
           in
           {
             options.services.nannuo-bot = {
@@ -112,7 +113,7 @@
                   Group = "nannuo";
                   WorkingDirectory = "/var/lib/nannuo-bot";
                   EnvironmentFile = cfg.tokenFile;
-                  ExecStart = "${jdk}/bin/java -jar ${cfg.jarPath}";
+                  ExecStart = "${javaRuntime}/bin/java -jar ${cfg.jarPath}";
 
                   Restart = "on-failure";
                   RestartSec = "10s";
