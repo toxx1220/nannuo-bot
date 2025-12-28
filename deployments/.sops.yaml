@@ -1,6 +1,6 @@
 keys:
   - &admin_local age1sur65t9wa9s0krds32kx9h379masmkyf663wwwav2ye0v5syyv2qkaxsd8
-  - &server_gce "age1..."  # REPLACE
+  - &server_gce age1e42ywp0604wytqg3qnf0kgywtsgmfm2cvfv5m883v6znsunjgqssg677q2
 
 creation_rules:
   - path_regex: secrets.yaml$

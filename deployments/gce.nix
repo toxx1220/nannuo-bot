@@ -1,21 +1,23 @@
 { config, pkgs, lib, modulesPath, ... }: {
-   description = "GCE specific configuration";
+ # GCE specific configuration
 
   imports = [
-    ./hardware-configuration.nix
-    "${modulesPath}/virtualisation/google-compute-image.nix"
+    ./gce_disk-config.nix
+    "${modulesPath}/virtualisation/google-compute-config.nix"
   ];
 
-  # Bootloader
-  boot.loader.grub.device = lib.mkForce "nodev";
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-partlabel/disk-main-root"; # prioritize disko setup
 
-  # Filesystem Layout
-  fileSystems."/" = lib.mkForce {
-    device = "/dev/sda1";
-    fsType = "ext4";
+  boot.loader.grub = {
+    device = lib.mkForce "nodev";
+    efiSupport = true;
+    efiInstallAsRemovable = true;
   };
 
   # Networking (GCE Specific Hostname/Domain)
-  networking.hostName = "nannuo-instance";
-  networking.domain = "us-central1-c.c.nomadic-bedrock-482308-a8.internal";
+  networking = {
+    hostName = "nannuo-instance";
+    domain = "us-central1-c.c.nomadic-bedrock-482308-a8.internal";
+    firewall.enable = lib.mkForce true; # Google config might disable firewall by default
+  };
 }

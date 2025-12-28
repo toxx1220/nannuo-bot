@@ -3,8 +3,8 @@
 # Common Configuration - Provider Agnostic
 # ============================================================================
 let
-  user = "nannuo";
-  sshPort = 6969;
+  user = "toxx";
+  sshPort = 22;
 in {
   nix = {
     settings = {
@@ -29,19 +29,17 @@ in {
     ];
   };
 
+  nix.settings = { # Use binary cache to avoid cross-compilation build errors
+      substituters = [ "https://mic92.cachix.org" ];
+      trusted-public-keys =
+        [ "mic92.cachix.org-1:gi8IhgiT3CYZnJsaW7fxznzTkMUOn1RY4GmXdT/nXYQ=" ];
+    };
+
   environment.systemPackages = with pkgs; [ micro btop tree age sops ];
 
   time.timeZone = "Europe/Berlin";
 
-  # When low on memory
   boot.tmp.cleanOnBoot = true;
-  zramSwap.enable = true;
-  zramSwap.memoryPercent = 50;
-
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 2048;
-  }];
 
   networking = {
     networkmanager.enable = true;
