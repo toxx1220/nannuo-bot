@@ -1,5 +1,5 @@
 {
-  description = "Nannuo Bot - A robust Discord bot in Kotlin";
+  description = "nannuo bot development and deployment flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,9 +16,7 @@
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        inputs.git-hooks-nix.flakeModule
-      ];
+      imports = [ inputs.git-hooks-nix.flakeModule ];
 
       systems = [
         "x86_64-linux"
@@ -28,29 +26,20 @@
       ];
 
       perSystem =
-        {
-          config,
-          self',
-          inputs',
-          pkgs,
-          ...
-        }:
+        { config, pkgs, ... }:
         let
           jdk = pkgs.jdk25;
         in
         {
           formatter = pkgs.nixfmt-rfc-style;
 
-          pre-commit.settings.hooks = {
-            nixfmt-rfc-style.enable = true;
-          };
+          pre-commit.settings.hooks.nixfmt-rfc-style.enable = true;
 
           devShells.default = pkgs.mkShell {
             buildInputs = [
               jdk
               pkgs.gradle_9
             ];
-
             shellHook = ''
               # Install the pre-commit hooks
               ${config.pre-commit.installationScript}
@@ -94,7 +83,7 @@
               jarPath = lib.mkOption {
                 type = lib.types.path;
                 default = "/var/lib/nannuo-bot/server.jar";
-                description = "Location of the bot jar file (uploaded via SCP/Github)";
+                description = "Location of the bot jar file";
               };
 
               tokenFile = lib.mkOption {
@@ -122,13 +111,17 @@
                   User = "nannuo";
                   Group = "nannuo";
                   WorkingDirectory = "/var/lib/nannuo-bot";
-
                   EnvironmentFile = cfg.tokenFile;
-
                   ExecStart = "${jdk}/bin/java -jar ${cfg.jarPath}";
 
-                  Restart = "always";
+                  Restart = "on-failure";
                   RestartSec = "10s";
+
+                  # standard hardening
+                  ProtectSystem = "full"; # Read-only /usr, /boot, /etc
+                  ProtectHome = true; # Inaccessible /home
+                  NoNewPrivileges = true; # Cannot escalate to root
+                  PrivateTmp = true;
                 };
               };
             };

@@ -27,18 +27,18 @@
   };
 
   nix.settings = {
-    cores = 1;
+    cores = 1; # Single core build to save RAM
     max-jobs = 1;
     auto-optimise-store = lib.mkForce false; # Save CPU during deploys
   };
 
+  # Run optimization at night instead
+  nix.optimise.automatic = true;
+
   # 3. Low Maintenance: Auto Updates & Garbage Collection
   system.autoUpgrade = {
     enable = true;
-    # Check for updates daily between 04:00 and 05:00
     dates = "04:00";
-    # Pull directly from repo.
-    # Ensure repo is public OR git keys are configured on the server.
     flake = "github:toxx1220/nannuo-bot#gce-x86";
     flags = [
       "--update-input"
@@ -48,32 +48,17 @@
     allowReboot = true; # Reboot if kernel updates
   };
 
-  # Aggressive GC to keep disk usage low on the small VM
-  nix.gc = {
-    automatic = true;
-    dates = "daily";
-    options = "--delete-older-than 3d";
-  };
-  nix.optimise.automatic = true; # Deduplicate files nightly
-
   # 4. Service Tuning
   systemd.services.nannuo-bot = {
     environment = {
-      # -XX:+UseSerialGC: Use the simplest Garbage Collector (lowest RAM overhead).
-      # -XX:MaxRAMPercentage: Fallback if Xmx isn't respected.
-      "JAVA_TOOL_OPTIONS" = "-Xmx600m -XX:+UseSerialGC -XX:MaxRAMPercentage=75.0";
+      # -Xmx600m: Leave ~400MB for OS overhead + ZRAM
+      # -XX:+UseSerialGC: Low overhead GC for single-core/low-RAM
+      "JAVA_TOOL_OPTIONS" = "-Xmx600m -XX:+UseSerialGC";
     };
 
     serviceConfig = {
-      Restart = lib.mkForce "on-failure";
-      RestartSec = "10s";
-
-      # Hard Service limit
+      # Hard Limit: Kill if it goes beyond 800MB
       MemoryMax = "800M";
-
-      # Hardening
-      ProtectSystem = "full";
-      ProtectHome = true;
     };
   };
 
