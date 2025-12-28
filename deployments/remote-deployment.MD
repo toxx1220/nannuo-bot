@@ -6,19 +6,8 @@
 ### Necessary to deploy:
 `deployments/keys/etc/ssh` -> host-key & host-key.pub (ssh server keys)
 
-### Low resource VM tweaks before deployment:
-#### Allocate Swap
-```bash
-fallocate -l 3G /swapfile
-  chmod 600 /swapfile
-  mkswap /swapfile
-  swapon /swapfile
-  ```
-#### Google specific: Deactivate google agents
-```bash
-systemctl stop google-guest-agent
-systemctl stop unattended-upgrades
-```
+### Deployments to machines with just 1GB RAM
+I wasn't able to build the system on a 1GB Google instance. If this happens, temporarily scale the instance for the install. Then scale down again.
 
 ### Deploy command:
 (needs to be run from `/deployments`)
@@ -26,7 +15,7 @@ systemctl stop unattended-upgrades
 nix run github:nix-community/nixos-anywhere -- \
 --flake .#gce-x86 \
 --extra-files keys \
-root@[host-ip]
+passwordless-sudo@[host-ip]
 ```
 
 If the VPS has enough RAM, one could also add `--build-on remote` to build on the Server.
