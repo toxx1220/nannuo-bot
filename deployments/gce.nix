@@ -8,7 +8,7 @@
 {
   imports = [
     ./gce_disk-config.nix
-    "${modulesPath}/virtualisation/google-compute-config.nix"
+    # "${modulesPath}/virtualisation/google-compute-config.nix" # DISABLED: Breaks manual SSH/User management
   ];
 
   # GCE Specific Hardware & Boot
