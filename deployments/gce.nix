@@ -8,13 +8,11 @@
 {
   imports = [
     ./gce_disk-config.nix
-    # Google Compute Config is intentionally NOT imported to prevent the Guest Agent
-    # from messing with users and SSH keys.
+    "${modulesPath}/virtualisation/google-compute-config.nix"
   ];
 
-  # ============================================================================
-  # 1. Boot & Kernel (Critical for GCE)
-  # ============================================================================
+  # 1. Disk & Boot
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-partlabel/disk-main-root"; # prioritize disko setup
   boot.loader.grub = {
     device = lib.mkForce "nodev";
     efiSupport = true;
@@ -92,16 +90,17 @@
   # ============================================================================
   zramSwap = {
     enable = true;
-    memoryPercent = 50;
+    memoryPercent = 50; # Compress up to 500MB of RAM
     priority = 100;
   };
 
   nix.settings = {
-    cores = 1;
+    cores = 1; # Single core build to save RAM
     max-jobs = 1;
     auto-optimise-store = lib.mkForce false; # Save CPU during deploys
   };
 
+  # Run optimization at night instead
   nix.optimise.automatic = true;
   documentation.enable = false;
 
@@ -111,6 +110,8 @@
   systemd.services.nannuo-bot = {
     environment = {
       "JAVA_TOOL_OPTIONS" = "-Xmx600m -XX:+UseSerialGC";
+      # -Xmx600m: Leave ~400MB for OS overhead + ZRAM
+      # -XX:+UseSerialGC: Low overhead GC
     };
     serviceConfig = {
       MemoryMax = "800M";
@@ -129,6 +130,6 @@
       "nixpkgs"
       "--commit-lock-file"
     ];
-    allowReboot = true;
+    allowReboot = true; # Reboot if kernel updates
   };
 }
