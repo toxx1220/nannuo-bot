@@ -8,6 +8,10 @@
     git-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -15,6 +19,8 @@
       self,
       nixpkgs,
       flake-parts,
+      sops-nix,
+      disko,
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -68,6 +74,19 @@
         };
 
       flake = {
+        nixosConfigurations = {
+          gce-x86 = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            modules = [
+              ./deployments/common.nix
+              ./deployments/gce.nix
+              self.nixosModules.default
+              sops-nix.nixosModules.sops
+              disko.nixosModules.disko
+            ];
+          };
+        };
+
         nixosModules.default =
           {
             config,
@@ -83,12 +102,6 @@
           {
             options.services.nannuo-bot = {
               enable = lib.mkEnableOption "Nannuo Bot Service";
-
-              jarPath = lib.mkOption {
-                type = lib.types.path;
-                default = "/var/lib/nannuo-bot/server.jar";
-                description = "Location of the bot jar file. If a path literal is used, it will be included in the nix store.";
-              };
 
               tokenFile = lib.mkOption {
                 type = lib.types.str;
@@ -116,7 +129,7 @@
                   Group = "nannuo";
                   WorkingDirectory = "/var/lib/nannuo-bot";
                   Environment = [ "DISCORD_TOKEN_PATH=${cfg.tokenFile}" ];
-                  ExecStart = "${javaRuntime}/bin/java -jar ${cfg.jarPath}";
+                  ExecStart = "${javaRuntime}/bin/java -jar ${self}/build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar";
 
                   Restart = "on-failure";
                   RestartSec = "10s";

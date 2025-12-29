@@ -10,11 +10,18 @@
 I wasn't able to build the system on a 1GB Google instance. If this happens, temporarily scale the instance for the install. Then scale down again.
 
 ### Deploy command:
-(needs to be run from `/deployments`)
+(needs to be run from the **project root**)
 ```bash
+# Build shadowJar
+./gradlew shadowJar
+
+# Ensure the JAR is visible to Nix
+git add -N -f build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar
+
+# Deploy
 nix run github:nix-community/nixos-anywhere -- \
 --flake .#gce-x86 \
---extra-files keys \
+--extra-files deployments/keys \
 passwordless-sudo@[host-ip]
 ```
 

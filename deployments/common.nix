@@ -108,7 +108,6 @@ in
   # Nannuo Bot Service
   services.nannuo-bot = {
     enable = true;
-    jarPath = ../build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar;
     tokenFile = config.sops.secrets.discord_token.path;
   };
 
