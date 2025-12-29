@@ -61,7 +61,22 @@ in
     };
   };
 
-  services.fail2ban.enable = true;
+  services.fail2ban = {
+    enable = true;
+    maxretry = 5;
+    ignoreIP = [
+      "127.0.0.1/8" # localhost
+      "::1"
+    ];
+    # Initial ban duration: 1 hour
+    bantime = "1h";
+    # Exponential backoff for repeat offenders
+    bantime-increment = {
+      enable = true;
+      factor = "2"; # Double the ban time each time
+      maxtime = "168h"; # Cap at 1 week
+    };
+  };
 
   services.openssh = {
     enable = true;
