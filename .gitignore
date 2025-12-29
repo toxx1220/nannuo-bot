@@ -9,3 +9,4 @@ out
 .pre-commit-config.yaml
 
 deployments/keys/
+.aider*

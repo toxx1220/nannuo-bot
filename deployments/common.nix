@@ -29,7 +29,8 @@ in
 
   users.users.${user} = {
     isNormalUser = true;
-    hashedPasswordFile = config.sops.secrets.user_password_hash.path;
+    # hashedPasswordFile = config.sops.secrets.user_password_hash.path;
+    initialPassword = "password";
     extraGroups = [
       "wheel"
       "sudo"
@@ -68,27 +69,19 @@ in
     ];
   };
 
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4j93LcS5wmBII8I+9A7m1hg/OTa0GMuB2HHDuCAOpy nobehm@gmail.com"
+  ];
+
   services.openssh = {
     enable = true;
     ports = [ sshPort ];
     settings = {
-      AllowUsers = [ user ];
-      PermitRootLogin = "no";
+      # AllowUsers = [ user "root" ];
+      PermitRootLogin = "prohibit-password";
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
     };
-    extraConfig = ''
-      ClientAliveInterval 3600
-      ClientAliveCountMax 3
-      	'';
-    banner = ''
-
-         ____  ____ _____  ____  __  ______
-        / __ \/ __ `/ __ \/ __ \/ / / / __ \
-       / / / / /_/ / / / / / / / /_/ / /_/ /
-      /_/ /_/\__,_/_/ /_/_/ /_/\__,_/\____/
-
-        	'';
   };
 
   system.stateVersion = "23.11";
@@ -100,7 +93,7 @@ in
   sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
   sops.secrets.discord_token = {
-    owner = "nannuo"; # Ensure the bot user can read it
+    owner = "root"; # Changed from "nannuo" for debugging
     # Restart the service if the token changes
     restartUnits = [ "nannuo-bot.service" ];
   };
@@ -114,7 +107,7 @@ in
   # ============================================================================
 
   services.nannuo-bot = {
-    enable = true;
+    enable = false; # Temporarily disabled for debugging
     jarPath = "/var/lib/nannuo-bot/server.jar";
     tokenFile = config.sops.secrets.discord_token.path;
   };
