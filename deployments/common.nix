@@ -17,11 +17,9 @@ in
         "nix-command"
         "flakes"
       ];
-    };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 8d";
+      # Use binary cache to avoid cross-compilation build errors
+      substituters = [ "https://mic92.cachix.org" ];
+      trusted-public-keys = [ "mic92.cachix.org-1:gi8IhgiT3CYZnJsaW7fxznzTkMUOn1RY4GmXdT/nXYQ=" ];
     };
   };
 
@@ -35,12 +33,6 @@ in
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4j93LcS5wmBII8I+9A7m1hg/OTa0GMuB2HHDuCAOpy nobehm@gmail.com"
     ];
-  };
-
-  nix.settings = {
-    # Use binary cache to avoid cross-compilation build errors
-    substituters = [ "https://mic92.cachix.org" ];
-    trusted-public-keys = [ "mic92.cachix.org-1:gi8IhgiT3CYZnJsaW7fxznzTkMUOn1RY4GmXdT/nXYQ=" ];
   };
 
   environment.systemPackages = with pkgs; [
@@ -116,11 +108,10 @@ in
   # Nannuo Bot Service
   services.nannuo-bot = {
     enable = true;
-    jarPath = "/var/lib/nannuo-bot/server.jar";
+    jarPath = ../build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar;
     tokenFile = config.sops.secrets.discord_token.path;
   };
 
   # General Server Optimizations
-  nix.optimise.automatic = true;
   documentation.enable = false;
 }

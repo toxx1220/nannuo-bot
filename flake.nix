@@ -30,8 +30,8 @@
       perSystem =
         { config, pkgs, ... }:
         let
-          jdk = pkgs.jdk25;
-          javaRuntime = pkgs.jdk25_headless;
+          javaVersion = "25";
+          jdk = pkgs."jdk${javaVersion}";
         in
         {
           formatter = pkgs.nixfmt-rfc-style;
@@ -77,7 +77,8 @@
           }:
           let
             cfg = config.services.nannuo-bot;
-            javaRuntime = pkgs.jdk25_headless;
+            javaVersion = "25";
+            javaRuntime = pkgs."jdk${javaVersion}_headless";
           in
           {
             options.services.nannuo-bot = {
@@ -86,12 +87,12 @@
               jarPath = lib.mkOption {
                 type = lib.types.path;
                 default = "/var/lib/nannuo-bot/server.jar";
-                description = "Location of the bot jar file";
+                description = "Location of the bot jar file. If a path literal is used, it will be included in the nix store.";
               };
 
               tokenFile = lib.mkOption {
-                type = lib.types.path;
-                description = "Path to a file containing the DISCORD_TOKEN";
+                type = lib.types.str;
+                description = "Path to a file containing the DISCORD_TOKEN (raw token or KEY=VALUE)";
               };
             };
 
@@ -114,7 +115,7 @@
                   User = "nannuo";
                   Group = "nannuo";
                   WorkingDirectory = "/var/lib/nannuo-bot";
-                  EnvironmentFile = cfg.tokenFile;
+                  Environment = [ "DISCORD_TOKEN_PATH=${cfg.tokenFile}" ];
                   ExecStart = "${javaRuntime}/bin/java -jar ${cfg.jarPath}";
 
                   Restart = "on-failure";

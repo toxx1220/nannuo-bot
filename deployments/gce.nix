@@ -61,7 +61,8 @@
 
   networking = {
     hostName = "nannuo-instance";
-    # GCE internal domain
+    # GCE internal domain - Note: This is project/zone specific.
+    # If redeploying to a different project or zone, update this accordingly.
     domain = "us-central1-c.c.nomadic-bedrock-482308-a8.internal";
   };
 

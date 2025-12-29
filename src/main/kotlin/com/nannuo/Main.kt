@@ -12,7 +12,11 @@ import org.slf4j.LoggerFactory
 
 suspend fun main() {
     val logger = LoggerFactory.getLogger("Main")
-    val token = System.getenv("DISCORD_TOKEN") ?: error("DISCORD_TOKEN environment variable not set")
+    
+    val token = System.getenv("DISCORD_TOKEN") 
+        ?: System.getenv("DISCORD_TOKEN_PATH")?.let { java.io.File(it).readText().trim() }
+        ?: error("Neither DISCORD_TOKEN nor DISCORD_TOKEN_PATH environment variable is set")
+
     val kord = Kord(token)
 
     val commands: List<Command> = listOf(
