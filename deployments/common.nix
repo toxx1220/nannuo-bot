@@ -12,7 +12,6 @@ in
 {
   nix = {
     settings = {
-      auto-optimise-store = true;
       experimental-features = [
         "nix-command"
         "flakes"
@@ -87,7 +86,7 @@ in
     '';
   };
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "25.11";
 
   # SOPS Secrets Management
   sops.defaultSopsFile = ./secrets.yaml;

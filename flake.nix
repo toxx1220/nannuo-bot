@@ -23,6 +23,9 @@
       disko,
       ...
     }:
+    let
+      javaVersion = "25";
+    in
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [ inputs.git-hooks-nix.flakeModule ];
 
@@ -36,7 +39,6 @@
       perSystem =
         { config, pkgs, ... }:
         let
-          javaVersion = "25";
           jdk = pkgs."jdk${javaVersion}";
         in
         {
@@ -96,7 +98,6 @@
           }:
           let
             cfg = config.services.nannuo-bot;
-            javaVersion = "25";
             javaRuntime = pkgs."jdk${javaVersion}_headless";
           in
           {
