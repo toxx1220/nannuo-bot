@@ -25,4 +25,6 @@ nix run github:nix-community/nixos-anywhere -- \
 passwordless-sudo@[host-ip]
 ```
 
+Note: If the deployment fails while evaluating / building the packages, you can retry as root@[host-ip].
+
 If the VPS has enough RAM, one could also add `--build-on remote` to build on the Server.

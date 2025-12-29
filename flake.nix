@@ -111,6 +111,17 @@
             };
 
             config = lib.mkIf cfg.enable {
+              assertions = [
+                {
+                  assertion = builtins.pathExists "${self}/build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar";
+                  message = ''
+                    ❌ Critical Deployment Error: The JAR file is not visible to Nix! You must track this file in git \n
+                    Location: build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar\n
+                    Run command: git add -N -f build/libs/nannuo-bot-1.0-SNAPSHOT-all.jar
+                  '';
+                }
+              ];
+
               users.users.nannuo = {
                 isSystemUser = true;
                 group = "nannuo";
