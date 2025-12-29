@@ -3,6 +3,11 @@
 2. Push the shadowJar
 3. Nix runs the jar as a system service
 
+### Check Token validity
+(run  from project root)
+
+`DISCORD_TOKEN=$(sops -d --extract '["discord_token"]' deployments/secrets.yaml) ./gradlew run`
+
 ### Necessary to deploy:
 `deployments/keys/etc/ssh` -> host-key & host-key.pub (ssh server keys)
 
