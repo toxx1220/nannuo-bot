@@ -4,9 +4,7 @@
   lib,
   ...
 }:
-# ============================================================================
 # Common Configuration - Provider Agnostic
-# ============================================================================
 let
   user = "toxx";
   sshPort = 22;
@@ -30,11 +28,8 @@ in
   users.users.${user} = {
     isNormalUser = true;
     hashedPasswordFile = config.sops.secrets.user_password_hash.path;
-    # initialPassword = "password";
     extraGroups = [
       "wheel"
-      "sudo"
-      "docker"
     ];
     packages = with pkgs; [ ];
     openssh.authorizedKeys.keys = [
@@ -54,20 +49,28 @@ in
     tree
     age
     sops
+    git
   ];
 
   time.timeZone = "Europe/Berlin";
 
   boot.tmp.cleanOnBoot = true;
+  boot.kernelParams = [
+    "panic=1"
+    "boot.panic_on_fail"
+  ];
 
   networking = {
-    networkmanager.enable = true;
-    firewall.allowedTCPPorts = [
-      80
-      443
-      sshPort
-    ];
+    networkmanager.enable = false;
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [
+        sshPort
+      ];
+    };
   };
+
+  services.fail2ban.enable = true;
 
   services.openssh = {
     enable = true;
@@ -110,13 +113,14 @@ in
     neededForUsers = true;
   };
 
-  # ============================================================================
   # Nannuo Bot Service
-  # ============================================================================
-
   services.nannuo-bot = {
     enable = true;
     jarPath = "/var/lib/nannuo-bot/server.jar";
     tokenFile = config.sops.secrets.discord_token.path;
   };
+
+  # General Server Optimizations
+  nix.optimise.automatic = true;
+  documentation.enable = false;
 }
