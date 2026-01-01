@@ -19,7 +19,7 @@ class WhatToDrink : Command {
             val teaCategory = TeaCategory.valueOf(args[0].uppercase())
             return sendRecommendation(message, TeaRepository.getRandomTeaWith(teaCategory).name)
         } catch (e: IllegalArgumentException) {
-            message.channel.createMessage("Invalid category '${args[0]}'. Valid categories are: ${TeaCategory.entries.joinToString(", ") { it.name.lowercase() }}.")
+            message.channel.createMessage("Invalid category '${args[0]}'. Valid categories are: ${TeaCategory.entries.joinToString(", ") { it.name.lowercase() }}.") // TODO: Implement user categories
             return
         }
     }
