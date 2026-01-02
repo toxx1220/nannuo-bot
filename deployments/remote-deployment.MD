@@ -44,5 +44,5 @@ If the VPS has enough RAM, one could also add `--build-on remote` to build on th
 ### Check live logs
 
 ```bash
-ssh passwordless-sudo@[host-ip] "journalctl -fu nannuo-bot"
+ssh user@[host-ip] "journalctl -fu nannuo-bot"
 ```
