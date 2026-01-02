@@ -92,7 +92,7 @@ object TeaRepository {
         "Longjing",
         "Biluochun",
         "Huangshan Maofeng",
-        "Lu'an Guapian",
+        "Lu'an Gu   apian",
         "Xinyang Maojian",
         "Taiping Houkui",
         "Anji Bai Cha",

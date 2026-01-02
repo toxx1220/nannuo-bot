@@ -7,6 +7,7 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.interaction.response.DeferredPublicMessageInteractionResponseBehavior
 import dev.kord.core.behavior.interaction.response.respond
 import dev.kord.core.entity.interaction.ChatInputCommandInteraction
+import dev.kord.core.entity.interaction.SubCommand
 import dev.kord.rest.builder.interaction.string
 import dev.kord.rest.builder.interaction.subCommand
 import org.slf4j.Logger
@@ -27,7 +28,8 @@ class WhatToDrink : Command {
 
             // Take first 25 (sub)categories to avoid exceeding Discord's command option limits
             TeaCategory.entries.take(25).forEach { category ->
-                subCommand(category.name.sentenceCase(), "Suggests a ${category.name.sentenceCase()} tea") {
+                // commands need to be lowercase.
+                subCommand(category.name.lowercase(), "Suggests a ${category.name.sentenceCase()} tea") {
                     val subCategories = TeaSubCategory.getByMainCategory(category)
                     if (subCategories.isNotEmpty()) {
                         string(
@@ -49,7 +51,7 @@ class WhatToDrink : Command {
         val response = interaction.deferPublicResponse()
 
         try {
-            val subCommandName = interaction.command.options.keys.firstOrNull() ?: ANY_CATEGORY
+            val subCommandName = (interaction.command as? SubCommand)?.name ?: ANY_CATEGORY
 
             if (subCommandName == ANY_CATEGORY) {
                 sendRecommendation(response, TeaRepository.getRandomTea().name)
