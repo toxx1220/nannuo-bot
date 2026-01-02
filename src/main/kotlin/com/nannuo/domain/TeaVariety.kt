@@ -1,20 +1,44 @@
 package com.nannuo.domain
 
-import com.nannuo.domain.TeaCategory.*
+import com.nannuo.domain.TeaCategory.BLACK
+import com.nannuo.domain.TeaCategory.GREEN
+import com.nannuo.domain.TeaCategory.HEICHA
+import com.nannuo.domain.TeaCategory.OOLONG
+import com.nannuo.domain.TeaCategory.PUER
+import com.nannuo.domain.TeaCategory.WHITE
+import com.nannuo.domain.TeaCategory.YELLOW
+import com.nannuo.domain.TeaSubCategory.ANXI
+import com.nannuo.domain.TeaSubCategory.BOUTIQUE
+import com.nannuo.domain.TeaSubCategory.CHINESE
+import com.nannuo.domain.TeaSubCategory.DANCONG
+import com.nannuo.domain.TeaSubCategory.FACTORY
+import com.nannuo.domain.TeaSubCategory.JAPANESE
+import com.nannuo.domain.TeaSubCategory.TAIWANESE
+import com.nannuo.domain.TeaSubCategory.YANCHA
+import java.util.Objects.isNull
 
 data class TeaVariety(
     val name: String,
-    val category: TeaCategory,
+    val mainCategory: TeaCategory,
+    val subCategory: TeaSubCategory? = null,
 )
 
 object TeaRepository {
 
     fun getRandomTea(): TeaVariety {
-        return getRandomTeaWith(TeaCategory.entries.random())
+        val randomCategory = TeaCategory.entries.random()
+        return getRandomTeaWith(randomCategory, null)
     }
 
     fun getRandomTeaWith(category: TeaCategory): TeaVariety {
-        val candidates = allTeas.filter { it.category == category }
+        return getRandomTeaWith(category, null)
+    }
+
+    fun getRandomTeaWith(category: TeaCategory, subCategory: TeaSubCategory?): TeaVariety {
+        val candidates = allTeas
+            .filter { it.mainCategory == category }
+            .filter { isNull(subCategory) || it.subCategory == subCategory }
+
         return candidates.random()
     }
 
@@ -22,25 +46,25 @@ object TeaRepository {
 
     private val allTeas: List<TeaVariety> by lazy {
         whiteTeas.map { TeaVariety(it, WHITE) } +
-            greenTeasChinese.map { TeaVariety(it, GREEN_CHINESE) } +
-            greenTeasJapanese.map { TeaVariety(it, GREEN_JAPANESE) } +
+            greenTeasChinese.map { TeaVariety(it, GREEN, CHINESE) } +
+            greenTeasJapanese.map { TeaVariety(it, GREEN, JAPANESE) } +
             yellowTeas.map { TeaVariety(it, YELLOW) } +
             blackTeas.map { TeaVariety(it, BLACK) } +
-            oolongTeasAnxi.map { TeaVariety(it, OOLONG_ANXI) } +
-            oolongTeasYancha.map { TeaVariety(it, OOLONG_YANCHA) } +
-            oolongTeasTaiwanese.map { TeaVariety(it, OOLONG_TAIWANESE) } +
-            oolongTeasDancong.map { TeaVariety(it, OOLONG_DANCONG) } +
+            oolongTeasAnxi.map { TeaVariety(it, OOLONG, ANXI) } +
+            oolongTeasYancha.map { TeaVariety(it, OOLONG, YANCHA) } +
+            oolongTeasTaiwanese.map { TeaVariety(it, OOLONG, TAIWANESE) } +
+            oolongTeasDancong.map { TeaVariety(it, OOLONG, DANCONG) } +
             puerFactory.flatMap { tea ->
                 puerPermutations.map { permutationString ->
-                    TeaVariety(String.format(permutationString, tea), PUER_FACTORY)
+                    TeaVariety(String.format(permutationString, tea), PUER, FACTORY)
                 }
             } +
             puerBoutique.flatMap { tea ->
                 puerPermutations.map { permutationString ->
-                    TeaVariety(String.format(permutationString, tea), PUER_BOUTIQUE)
+                    TeaVariety(String.format(permutationString, tea), PUER, BOUTIQUE)
                 }
             } +
-            nonPuHeicha.map { TeaVariety(it, NON_PU_HEICHA) }
+            nonPuHeicha.map { TeaVariety(it, HEICHA) }
     }
 
     // Modifiers

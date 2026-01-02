@@ -1,16 +1,36 @@
 package com.nannuo.domain
 
-enum class TeaCategory(val displayName: String) { // TODO: displayName vs command/categoryName
-    WHITE("White"),
-    GREEN_CHINESE("Chinese Green"), // todo: args for command processing
-    GREEN_JAPANESE("Japanese Green"),
-    YELLOW("Yellow"),
-    OOLONG_ANXI("Anxi Oolong"),
-    OOLONG_TAIWANESE("Taiwanese Oolong"),
-    OOLONG_YANCHA("Yancha Oolong"),
-    OOLONG_DANCONG("Dancong Oolong"),
-    BLACK("Black"),
-    PUER_FACTORY("Factory Puer"),
-    PUER_BOUTIQUE("Boutique Puer"),
-    NON_PU_HEICHA("Non-Pu Heicha"),
+import java.util.*
+
+enum class TeaCategory {
+    WHITE,
+    GREEN,
+    YELLOW,
+    OOLONG,
+    BLACK,
+    PUER,
+    HEICHA;
+
+    companion object {
+        fun fromString(value: String): Optional<TeaCategory> {
+            return Optional.ofNullable(entries.find { it.name.equals(value, ignoreCase = true) })
+        }
+    }
+}
+
+enum class TeaSubCategory(val mainCategory: TeaCategory) {
+    CHINESE(TeaCategory.GREEN),
+    JAPANESE(TeaCategory.GREEN),
+    ANXI(TeaCategory.OOLONG),
+    TAIWANESE(TeaCategory.OOLONG),
+    YANCHA(TeaCategory.OOLONG),
+    DANCONG(TeaCategory.OOLONG),
+    FACTORY(TeaCategory.PUER),
+    BOUTIQUE(TeaCategory.PUER);
+
+    companion object {
+        fun fromString(value: String): Optional<TeaSubCategory> {
+            return Optional.ofNullable(entries.find { it.name.equals(value, ignoreCase = true) })
+        }
+    }
 }

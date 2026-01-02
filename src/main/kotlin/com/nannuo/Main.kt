@@ -10,10 +10,12 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import org.slf4j.LoggerFactory
 
+private const val MESSAGE_PREFIX = "!"
+
 suspend fun main() {
     val logger = LoggerFactory.getLogger("Main")
-    
-    val token = System.getenv("DISCORD_TOKEN") 
+
+    val token = System.getenv("DISCORD_TOKEN")
         ?: System.getenv("DISCORD_TOKEN_PATH")?.let { java.io.File(it).readText().trim() }
         ?: error("Neither DISCORD_TOKEN nor DISCORD_TOKEN_PATH environment variable is set")
 
@@ -27,7 +29,7 @@ suspend fun main() {
 
     kord.on<MessageCreateEvent> {
         if (message.author?.isBot != false) return@on
-        if (!message.content.startsWith("!")) return@on
+        if (!message.content.startsWith(MESSAGE_PREFIX)) return@on
 
         val parts = message.content.substring(1) // remove "!"
             .trim()
