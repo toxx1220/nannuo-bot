@@ -41,6 +41,17 @@ Note: If the deployment fails while evaluating / building the packages, you can 
 
 If the VPS has enough RAM, one could also add `--build-on remote` to build on the Server.
 
+### Note on Google Free Tier
+
+External IPs aren't in the free tier. To avoid costs, disable it after deployment and use:
+
+```bash
+ gcloud compute ssh user@[host-ip] \                                                                                                            00:35:53
+    --zone=[zone] \
+    --tunnel-through-iap \
+    --ssh-key-file=~/.ssh/[ssh-file] \
+>   --project [project-id]```
+
 ### Check live logs
 
 ```bash
