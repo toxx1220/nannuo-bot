@@ -50,8 +50,8 @@ External IPs aren't in the free tier. To avoid costs, disable it after deploymen
     --zone=[zone] \
     --tunnel-through-iap \
     --ssh-key-file=~/.ssh/[ssh-file] \
->   --project [project-id]```
-
+    --project [project-id]```
+```
 ### Check live logs
 
 ```bash
