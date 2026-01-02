@@ -32,5 +32,9 @@ enum class TeaSubCategory(val mainCategory: TeaCategory) {
         fun fromString(value: String): Optional<TeaSubCategory> {
             return Optional.ofNullable(entries.find { it.name.equals(value, ignoreCase = true) })
         }
+
+        fun getByMainCategory(category: TeaCategory): List<TeaSubCategory> {
+            return entries.filter { it.mainCategory == category }
+        }
     }
 }

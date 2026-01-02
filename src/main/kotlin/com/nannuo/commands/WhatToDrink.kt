@@ -8,8 +8,7 @@ import kotlin.jvm.optionals.getOrNull
 
 private val USAGE_ADVICE = """
     Usage: `!whattodrink [optional: mainCategory] [optional: subCategory]`
-    Available main categories: [*%s*]
-    Available sub categories: [*%s*]
+    Available categories: %s
 """.trimIndent()
 
 /**
@@ -62,19 +61,30 @@ class WhatToDrink : Command {
 
     private suspend fun sendUsageAdvice(msg: Message, error: String?) {
         val errorString = error?.let { "$it\n" } ?: ""
-        val categories = getCategoryOptions().joinToString(", ")
-        val subCategories = getSubCategoryOptions().joinToString(", ")
+        val allCategories = getCategoryOptions().joinToString("")
 
         msg.channel.createMessage(
-            errorString + USAGE_ADVICE.format(categories, subCategories),
+            errorString + USAGE_ADVICE.format(allCategories),
         )
     }
 
-    private fun getSubCategoryOptions(): List<String> {
-        return TeaSubCategory.entries.map { it.name.capitalizeFirstLowerRest() }
+    private fun getCategoryOptions(): List<String> {
+        return TeaCategory.entries
+            .map { mainCategory ->
+                val mainCategoryName = mainCategory.name.capitalizeFirstLowerRest()
+                val subCategoryNames =
+                    TeaSubCategory.getByMainCategory(mainCategory).map { it.name.capitalizeFirstLowerRest() }
+                val subCategoryString =
+                    if (subCategoryNames.isEmpty()) {
+                        "no subcategories available"
+                    } else {
+                        subCategoryNames.joinToString(", ")
+                    }
+                return@map "\n$mainCategoryName: *[$subCategoryString]*"
+            }.toList()
     }
 
-    private fun getCategoryOptions(): List<String> {
+    private fun getMainCategoryOptions(): List<String> {
         return TeaCategory.entries.map { it.name.capitalizeFirstLowerRest() }
     }
 
