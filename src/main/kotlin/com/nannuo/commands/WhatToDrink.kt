@@ -27,16 +27,16 @@ class WhatToDrink : Command {
 
             // Take first 25 (sub)categories to avoid exceeding Discord's command option limits
             TeaCategory.entries.take(25).forEach { category ->
-                subCommand(category.name.lowercase(), "Suggests a ${category.name.capitalizeFirstLowerRest()} tea") {
+                subCommand(category.name.sentenceCase(), "Suggests a ${category.name.sentenceCase()} tea") {
                     val subCategories = TeaSubCategory.getByMainCategory(category)
                     if (subCategories.isNotEmpty()) {
                         string(
                             SUBCATEGORY,
-                            "Suggests a ${category.name.capitalizeFirstLowerRest()} tea from a specific sub-category",
+                            "Suggests a ${category.name.sentenceCase()} tea from a specific sub-category",
                         ) {
                             required = false
                             subCategories.take(25).forEach { sub ->
-                                choice(sub.name.capitalizeFirstLowerRest(), sub.name)
+                                choice(sub.name.sentenceCase(), sub.name)
                             }
                         }
                     }
@@ -85,8 +85,10 @@ class WhatToDrink : Command {
         response.respond { content = suggestion }
     }
 
-    private fun String.capitalizeFirstLowerRest(): String =
-        lowercase().replaceFirstChar { it.titlecase() }
+    /**
+     * Converts the string to sentence case (first letter capitalized, rest lowercase).
+     */
+    private fun String.sentenceCase(): String = lowercase().replaceFirstChar { it.titlecase() }
 
     object MessageVariations {
         val suggestions = listOf(
