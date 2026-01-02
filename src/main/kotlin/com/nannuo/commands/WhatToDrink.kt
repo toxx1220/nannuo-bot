@@ -3,94 +3,90 @@ package com.nannuo.commands
 import com.nannuo.domain.TeaCategory
 import com.nannuo.domain.TeaRepository
 import com.nannuo.domain.TeaSubCategory
-import dev.kord.core.entity.Message
-import kotlin.jvm.optionals.getOrNull
+import dev.kord.core.Kord
+import dev.kord.core.behavior.interaction.response.DeferredPublicMessageInteractionResponseBehavior
+import dev.kord.core.behavior.interaction.response.respond
+import dev.kord.core.entity.interaction.ChatInputCommandInteraction
+import dev.kord.rest.builder.interaction.string
+import dev.kord.rest.builder.interaction.subCommand
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-private val USAGE_ADVICE = """
-    Usage: `!whattodrink [optional: mainCategory] [optional: subCategory]`
-    Available categories: %s
-""".trimIndent()
-
-/**
- * !whattodrink [optional: mainCategory] [optional: subcategory]
- * Examples:
- * !whattodrink
- * !whattodrink green
- * !whattodrink chinese
- * !whattodrink green chinese -> seems most consistent
- */
+private const val ANY_CATEGORY = "any"
+private const val SUBCATEGORY = "subcategory"
 
 class WhatToDrink : Command {
     override val name: String = "whattodrink"
     override val description: String = "Suggests a random tea for you."
+    val logger: Logger = LoggerFactory.getLogger("WhatToDrink")
 
-    override suspend fun execute(
-        message: Message,
-        args: List<String>,
-    ) {
-        when (args.size) {
-            0 -> sendRecommendation(message, TeaRepository.getRandomTea().name)
+    override suspend fun register(kord: Kord) {
+        kord.createGlobalChatInputCommand(name, description) {
+            // Necessary Workaround: subcommand "any" acts as '/whattodrink' without sub-commands to select any category-independent tea
+            subCommand(ANY_CATEGORY, "Suggests a random tea")
 
-            1 -> {
-                val category: TeaCategory = TeaCategory.fromString(args[0]).getOrNull()
-                    ?: return sendUsageAdvice(message, "Invalid tea category: ${args[0]}")
-
-                sendRecommendation(message, TeaRepository.getRandomTeaWith(category).name)
+            // Take first 25 (sub)categories to avoid exceeding Discord's command option limits
+            TeaCategory.entries.take(25).forEach { category ->
+                subCommand(category.name.lowercase(), "Suggests a ${category.name.capitalizeFirstLowerRest()} tea") {
+                    val subCategories = TeaSubCategory.getByMainCategory(category)
+                    if (subCategories.isNotEmpty()) {
+                        string(
+                            SUBCATEGORY,
+                            "Suggests a ${category.name.capitalizeFirstLowerRest()} tea from a specific sub-category",
+                        ) {
+                            required = false
+                            subCategories.take(25).forEach { sub ->
+                                choice(sub.name.capitalizeFirstLowerRest(), sub.name)
+                            }
+                        }
+                    }
+                }
             }
-
-            2 -> {
-                val category: TeaCategory = TeaCategory.fromString(args[0]).getOrNull()
-                    ?: return sendUsageAdvice(message, "Invalid tea category: ${args[0]}")
-                val subCategory: TeaSubCategory = TeaSubCategory.fromString(args[1]).getOrNull()
-                    ?: return sendUsageAdvice(message, "Invalid tea subcategory: ${args[1]}")
-
-                sendRecommendation(message, TeaRepository.getRandomTeaWith(category, subCategory).name)
-            }
-
-            else -> sendUsageAdvice(message, "Invalid number of arguments.")
         }
     }
 
-    private fun getCategory(arg: String): TeaCategory = (TeaCategory.fromString(arg).getOrNull()
-        ?: throw IllegalArgumentException("Invalid tea category: $arg"))
+    override suspend fun handle(interaction: ChatInputCommandInteraction) {
+        val response = interaction.deferPublicResponse()
 
-    private suspend fun sendRecommendation(message: Message, teaName: String) {
+        try {
+            val subCommandName = interaction.command.options.keys.firstOrNull() ?: ANY_CATEGORY
+
+            if (subCommandName == ANY_CATEGORY) {
+                sendRecommendation(response, TeaRepository.getRandomTea().name)
+                return
+            }
+
+            val category: TeaCategory = TeaCategory.fromString(subCommandName)
+                .orElseThrow { IllegalStateException("Received unknown category: $subCommandName") }
+
+            val subCategoryArg = interaction.command.strings[SUBCATEGORY]
+            val subCategory: TeaSubCategory? = subCategoryArg?.let {
+                TeaSubCategory.fromString(it)
+                    .orElseThrow { IllegalStateException("Received unknown sub-category: $it") }
+            }
+
+            val tea = TeaRepository.getRandomTeaWith(category, subCategory)
+            sendRecommendation(response, tea.name)
+
+        } catch (e: NoSuchElementException) {
+            logger.warn("No teas found for the selected criteria! ${e.message}")
+            response.respond { content = "No teas found for the selected criteria." }
+        } catch (e: Exception) {
+            logger.error("Internal error in WhatToDrink: ${e.message}")
+            response.respond { content = "An internal error occurred while processing your request." }
+        }
+    }
+
+    private suspend fun sendRecommendation(
+        response: DeferredPublicMessageInteractionResponseBehavior,
+        teaName: String,
+    ) {
         val suggestion = MessageVariations.suggestions.random().format(teaName)
-        message.channel.createMessage(suggestion)
-    }
-
-    private suspend fun sendUsageAdvice(msg: Message, error: String?) {
-        val errorString = error?.let { "$it\n" } ?: ""
-        val allCategories = getCategoryOptions().joinToString("")
-
-        msg.channel.createMessage(
-            errorString + USAGE_ADVICE.format(allCategories),
-        )
-    }
-
-    private fun getCategoryOptions(): List<String> {
-        return TeaCategory.entries
-            .map { mainCategory ->
-                val mainCategoryName = mainCategory.name.capitalizeFirstLowerRest()
-                val subCategoryNames =
-                    TeaSubCategory.getByMainCategory(mainCategory).map { it.name.capitalizeFirstLowerRest() }
-                val subCategoryString =
-                    if (subCategoryNames.isEmpty()) {
-                        "no subcategories available"
-                    } else {
-                        subCategoryNames.joinToString(", ")
-                    }
-                return@map "\n$mainCategoryName: *[$subCategoryString]*"
-            }.toList()
-    }
-
-    private fun getMainCategoryOptions(): List<String> {
-        return TeaCategory.entries.map { it.name.capitalizeFirstLowerRest() }
+        response.respond { content = suggestion }
     }
 
     private fun String.capitalizeFirstLowerRest(): String =
         lowercase().replaceFirstChar { it.titlecase() }
-
 
     object MessageVariations {
         val suggestions = listOf(

@@ -30,10 +30,6 @@ object TeaRepository {
         return getRandomTeaWith(randomCategory, null)
     }
 
-    fun getRandomTeaWith(category: TeaCategory): TeaVariety {
-        return getRandomTeaWith(category, null)
-    }
-
     fun getRandomTeaWith(category: TeaCategory, subCategory: TeaSubCategory?): TeaVariety {
         val candidates = allTeas
             .filter { it.mainCategory == category }
