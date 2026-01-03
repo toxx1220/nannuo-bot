@@ -1,6 +1,7 @@
 package com.nannuo
 
 import com.nannuo.commands.Command
+import com.nannuo.commands.Ping
 import com.nannuo.commands.WhatToDrink
 import dev.kord.core.Kord
 import dev.kord.core.event.interaction.ChatInputCommandInteractionCreateEvent
@@ -18,6 +19,7 @@ suspend fun main() {
 
     val commands: List<Command> = listOf(
         WhatToDrink(),
+        Ping(),
     )
     val commandMap = commands.associateBy { it.name }
 
