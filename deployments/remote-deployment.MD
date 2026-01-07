@@ -37,7 +37,7 @@ nix run github:nix-community/nixos-anywhere -- \
 passwordless-sudo@[host-ip]
 ```
 
-Note: If the deployment fails while evaluating / building the packages, you can retry as root@[host-ip].
+Note: If the deployment fails while evaluating / building the packages, you can retry as `root@[host-ip]`.
 
 If the VPS has enough RAM, one could also add `--build-on remote` to build on the Server.
 
@@ -50,8 +50,8 @@ External IPs aren't in the free tier. To avoid costs, disable it after deploymen
     --zone=[zone] \
     --tunnel-through-iap \
     --ssh-key-file=~/.ssh/[ssh-file] \
->   --project [project-id]```
-
+    --project [project-id]```
+```
 ### Check live logs
 
 ```bash
