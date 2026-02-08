@@ -1,4 +1,5 @@
-- [ ] Add `whattodrink category`
+- [x] Add `whattodrink category`
 - [ ] Add `whattodrink sheng/shu`
-- [ ] Add babelcarp integration
+- [ ] Add babelcarp integration 
+- [ ] Add NNS Links
 - [ ] Temperature Parameter
