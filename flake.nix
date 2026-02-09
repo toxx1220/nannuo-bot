@@ -97,6 +97,11 @@
             outputHashAlgo = "sha256";
             outputHashMode = "flat";
             outputHash = currentHash;
+
+            # The Gradle cache contains text references to Nix store paths (e.g., JDK paths
+            # in cached metadata). These are not actual runtime dependencies, so ignoring them
+            # is fine and prevents nix build errors.
+            unsafeDiscardReferences.out = true;
           };
 
           # --- Main Build ---
