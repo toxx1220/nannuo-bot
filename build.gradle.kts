@@ -14,13 +14,13 @@ idea {
 
 val projectVersion: String by project
 val javaVersion: String by project
+val projectGroup: String by project
 
-group = "com.nannuo"
+group = projectGroup
 version = projectVersion
 
 repositories {
     mavenCentral()
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
 }
 
 dependencies {
