@@ -1,7 +1,9 @@
 builds:
-    branch:
+    branches:
         - main
         - dev
+    include:
+        - packages.aarch64-linux.default
 
 deployments:
     -   name: vps-redeploy

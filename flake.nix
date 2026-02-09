@@ -63,7 +63,11 @@
           # --- Dependency Management ---
           # This is the "Lock" for your dependencies.
           # To update, run: nix run .#update-deps
-          depsHashFile = ./deployments/deps-hash.nix;
+          #
+          # Gradle caches can differ per-OS/arch, so they need to be stored per system.
+          depsHashDir = ./deployments/deps-hash;
+          hostSystem = pkgs.stdenv.hostPlatform.system;
+          depsHashFile = depsHashDir + "/${hostSystem}.nix";
 
           # Dummy hash to allow the script to run if file is missing
           currentHash = if builtins.pathExists depsHashFile then import depsHashFile else pkgs.lib.fakeHash;
@@ -97,6 +101,12 @@
             outputHashAlgo = "sha256";
             outputHashMode = "flat";
             outputHash = currentHash;
+
+            # The Gradle cache contains text references to Nix store paths (e.g., JDK paths
+            # in cached metadata). These are not actual runtime dependencies, so ignoring them
+            # is fine and prevents nix build errors.
+            __structuredAttrs = true; # required to use unsafeDiscardReferences
+            unsafeDiscardReferences.out = true;
           };
 
           # --- Main Build ---
@@ -151,7 +161,12 @@
           pre-commit.settings.hooks.nixfmt-rfc-style.enable = true;
 
           packages = {
+            # Standard names:
+            # - `default` for `nix build`
+            # - `nannuo-bot` for `nix build .#nannuo-bot`
             default = nannuo-bot;
+            nannuo-bot = nannuo-bot;
+
             nannuo-bot-deps = nannuo-bot-deps;
             update-deps = update-deps;
           };
@@ -189,7 +204,7 @@
 
       flake = {
         nixosConfigurations = {
-          # --- Google Cloud Compute flake ---
+          # --- Google Cloud Compute flake, currently in production. To be replaced. ---
           gce-x86 = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             modules = [

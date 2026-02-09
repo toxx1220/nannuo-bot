@@ -1,3 +1,9 @@
+# Deployment Plan (DEPRECATED)
+
+> **Note:** This deployment method (GCE via nixos-anywhere from this repo) is **DEPRECATED**.
+> The production deployment is now managed via the [nix-vps](https://github.com/toxx1220/nix-vps) repository, which consumes this flake as an input.
+> The instructions below are kept for historical reference or rollback purposes.
+
 ## Deployment of the VPS happen via:
 
 1. (Build the VPS with nixos-anywhere)
