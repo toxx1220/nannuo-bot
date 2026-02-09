@@ -3,29 +3,86 @@
 # Called via: nix run .#update-deps
 set -euo pipefail
 
-echo "[..] Calculating new dependency hash"
-echo "     (This may take a few minutes as it downloads dependencies)"
+usage() {
+  cat <<'EOF'
+Usage:
+  update-deps              Update deps hash for the current system only
+  update-deps --all        Update deps hashes for all supported systems
+  update-deps <system...>  Update deps hashes for specific Nix systems
 
-# Capture output; allow failure since hash mismatch is expected
-OUT=$(nix build .#nannuo-bot-deps --no-link 2>&1) && {
-  echo "[OK] Dependencies are already up to date. No hash change needed."
-  exit 0
+Examples:
+  nix run .#update-deps
+  nix run .#update-deps -- --all
+  nix run .#update-deps -- aarch64-linux x86_64-linux
+EOF
 }
 
-# Extract new hash from "got: sha256-..." line
-NEW_HASH=$(grep -oE 'got:[[:space:]]*sha256-[^[:space:]]+' <<< "$OUT" | sed 's/got:[[:space:]]*//' || true)
+# Resolve current system (works on nix >= 2.4)
+CURRENT_SYSTEM=$(nix eval --raw --impure --expr builtins.currentSystem)
 
-if [[ -z "$NEW_HASH" ]]; then
-  echo "[FAIL] Could not automatically determine the new hash."
-  echo "Error output was:"
-  echo "$OUT"
-  exit 1
+SUPPORTED_SYSTEMS=(
+  "x86_64-linux"
+  "aarch64-linux"
+  "x86_64-darwin"
+  "aarch64-darwin"
+)
+
+TARGET_SYSTEMS=()
+
+if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
+  usage
+  exit 0
+elif [[ ${1:-} == "--all" ]]; then
+  TARGET_SYSTEMS=("${SUPPORTED_SYSTEMS[@]}")
+  shift
+elif [[ $# -gt 0 ]]; then
+  TARGET_SYSTEMS=("$@")
+else
+  TARGET_SYSTEMS=("$CURRENT_SYSTEM")
 fi
 
-echo "[OK] New hash found: $NEW_HASH"
-echo "\"$NEW_HASH\"" > deployments/deps-hash.nix
-echo "[OK] deployments/deps-hash.nix updated!"
+mkdir -p deployments/deps-hash
 
-# Automatically stage the change if in a git repo
-[[ -d .git ]] && git add deployments/deps-hash.nix && echo "[OK] Staged deployments/deps-hash.nix"
+update_one() {
+  local system="$1"
+  local out new_hash hash_file
 
+  echo "[..] Calculating new dependency hash for ${system}"
+  echo "     (This may take a few minutes as it downloads dependencies)"
+
+  # Capture output; allow failure since hash mismatch is expected
+  out=$(nix build .#nannuo-bot-deps --system "${system}" --no-link 2>&1) && {
+    echo "[OK] ${system}: dependencies are already up to date. No hash change needed."
+    return 0
+  }
+
+  # Extract new hash from "got: sha256-..." line
+  new_hash=$(grep -oE 'got:[[:space:]]*sha256-[^[:space:]]+' <<<"$out" | sed 's/got:[[:space:]]*//' || true)
+
+  if [[ -z "$new_hash" ]]; then
+    echo "[FAIL] ${system}: could not automatically determine the new hash."
+    echo "Error output was:"
+    echo "$out"
+    return 1
+  fi
+
+  echo "[OK] ${system}: new hash found: $new_hash"
+
+  hash_file="deployments/deps-hash/${system}.nix"
+  echo "\"$new_hash\"" >"${hash_file}"
+  echo "[OK] Wrote ${hash_file}"
+
+  # Automatically stage the change if in a git repo
+  [[ -d .git ]] && git add "${hash_file}" >/dev/null 2>&1 || true
+}
+
+fail=0
+for sys in "${TARGET_SYSTEMS[@]}"; do
+  if ! update_one "$sys"; then
+    fail=1
+  fi
+done
+
+[[ -d .git ]] && echo "[OK] Staged updated deps-hash files (if any)"
+
+exit "$fail"
