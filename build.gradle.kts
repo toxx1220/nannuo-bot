@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.0-RC3"
+    kotlin("jvm") version "2.3.10"
     id("com.gradleup.shadow") version "8.3.5"
     application
     idea
@@ -12,8 +12,11 @@ idea {
     }
 }
 
+val projectVersion: String by project
+val javaVersion: String by project
+
 group = "com.nannuo"
-version = "1.0-SNAPSHOT"
+version = projectVersion
 
 repositories {
     mavenCentral()
@@ -26,8 +29,8 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(25)
-    
+    jvmToolchain(javaVersion.toInt())
+
     compilerOptions {
         // Enable the new experimental checker mentioned in release notes
         freeCompilerArgs.add("-Xreturn-value-checker=check")
