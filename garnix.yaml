@@ -1,5 +1,5 @@
 builds:
-    include:
+    branches:
         - main
         - dev
 
