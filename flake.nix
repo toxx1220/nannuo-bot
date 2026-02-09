@@ -101,6 +101,7 @@
             # The Gradle cache contains text references to Nix store paths (e.g., JDK paths
             # in cached metadata). These are not actual runtime dependencies, so ignoring them
             # is fine and prevents nix build errors.
+            __structuredAttrs = true; # required to use unsafeDiscardReferences
             unsafeDiscardReferences.out = true;
           };
 
