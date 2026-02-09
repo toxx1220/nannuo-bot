@@ -2,6 +2,9 @@ builds:
     branches:
         - main
         - dev
+    include:
+        - packages.x86_64-linux.default
+        - packages.aarch64-linux.default
 
 deployments:
     -   name: vps-redeploy
