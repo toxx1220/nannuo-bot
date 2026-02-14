@@ -12,6 +12,10 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -41,10 +45,15 @@
       javaVersion = getProp "javaVersion";
       projectVersion = getProp "projectVersion";
       pname = getProp "rootProjectName";
+
+      jarSource = import ./jar-source.nix;
     in
 
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ inputs.git-hooks-nix.flakeModule ];
+      imports = [
+        inputs.git-hooks-nix.flakeModule
+        inputs.treefmt-nix.flakeModule
+      ];
 
       systems = [
         "x86_64-linux"
@@ -58,100 +67,43 @@
         let
           jdk = pkgs."jdk${javaVersion}";
           jdk_headless = pkgs."jdk${javaVersion}_headless";
-          gradle = pkgs.gradle_9;
 
-          # --- Dependency Management ---
-          # This is the "Lock" for your dependencies.
-          # To update, run: nix run .#update-deps
-          #
-          # Gradle caches can differ per-OS/arch, so they need to be stored per system.
-          depsHashDir = ./deployments/deps-hash;
-          hostSystem = pkgs.stdenv.hostPlatform.system;
-          depsHashFile = depsHashDir + "/${hostSystem}.nix";
-
-          # Dummy hash to allow the script to run if file is missing
-          currentHash = if builtins.pathExists depsHashFile then import depsHashFile else pkgs.lib.fakeHash;
-
-          # This derivation fetches all dependencies into a reproducible archive
-          nannuo-bot-deps = pkgs.stdenv.mkDerivation {
-            pname = "${pname}-deps";
-            version = projectVersion;
-            src = ./.;
-            nativeBuildInputs = [
-              jdk
-              gradle
-              pkgs.cacert
-            ];
-
-            # Disable the Nix Gradle setup hook — it injects "--offline" and an
-            # init-script that interfere with dependency fetching in the FOD.
-            dontUseGradleConfigure = true;
-
-            buildPhase = ''
-              export GRADLE_USER_HOME=$(pwd)/.gradle
-              export JAVA_HOME=${jdk}
-
-              # Run the actual build to resolve and cache all dependencies.
-              # Use 'command gradle' to bypass any shell-function wrappers.
-              command gradle --no-daemon shadowJar -x test --info
-            '';
-            installPhase = ''
-              tar -cf $out .gradle/caches
-            '';
-            outputHashAlgo = "sha256";
-            outputHashMode = "flat";
-            outputHash = currentHash;
-
-            # The Gradle cache contains text references to Nix store paths (e.g., JDK paths
-            # in cached metadata). These are not actual runtime dependencies, so ignoring them
-            # is fine and prevents nix build errors.
-            __structuredAttrs = true; # required to use unsafeDiscardReferences
-            unsafeDiscardReferences.out = true;
+          # Fetch the pre-built JAR from GitHub Releases
+          jar = pkgs.fetchurl {
+            url = jarSource.url;
+            hash = jarSource.hash;
           };
 
-          # --- Main Build ---
+          # --- Main Package ---
+          # Wraps the pre-built JAR with a headless JDK runtime.
           nannuo-bot = pkgs.stdenv.mkDerivation {
-            pname = pname;
+            inherit pname;
             version = projectVersion;
-            src = ./.;
 
-            nativeBuildInputs = [
-              jdk
-              gradle
-              pkgs.makeWrapper
-            ];
+            # No source to unpack — use the pre-built JAR directly
+            dontUnpack = true;
 
-            buildPhase = ''
-              export GRADLE_USER_HOME=$(mktemp -d)
-              export JAVA_HOME=${jdk}
-
-              # Extract cached dependencies
-              tar -xf ${nannuo-bot-deps} -C .
-              cp -r .gradle/caches $GRADLE_USER_HOME/
-
-              # Run in offline mode
-              gradle shadowJar --no-daemon --offline
-            '';
+            nativeBuildInputs = [ pkgs.makeWrapper ];
 
             installPhase = ''
-              mkdir -p $out/share/java
-              cp build/libs/*-all.jar $out/share/java/${pname}.jar
+              mkdir -p $out/share/java $out/bin
+              cp ${jar} $out/share/java/${pname}.jar
 
-              mkdir -p $out/bin
               makeWrapper ${jdk_headless}/bin/java $out/bin/${pname} \
                 --add-flags "-jar $out/share/java/${pname}.jar"
             '';
           };
 
-          # --- Update Dependency Automation ---
-          update-deps = pkgs.writeShellApplication {
-            name = "update-deps";
+          # --- Update JAR Hash Script ---
+          update-jar = pkgs.writeShellApplication {
+            name = "update-jar";
             runtimeInputs = [
               pkgs.nix
               pkgs.coreutils
               pkgs.git
+              pkgs.jq
             ];
-            text = builtins.readFile ./scripts/update-deps.sh;
+            text = builtins.readFile ./scripts/update-jar.sh;
           };
 
         in
@@ -161,29 +113,25 @@
           pre-commit.settings.hooks.nixfmt-rfc-style.enable = true;
 
           packages = {
-            # Standard names:
-            # - `default` for `nix build`
-            # - `nannuo-bot` for `nix build .#nannuo-bot`
             default = nannuo-bot;
             nannuo-bot = nannuo-bot;
-
-            nannuo-bot-deps = nannuo-bot-deps;
-            update-deps = update-deps;
+            update-jar = update-jar;
           };
 
           # --- Dev Shell ---
+          treefmt.config = import ./treefmt.nix;
           devShells.default = pkgs.mkShell {
             packages = [
+              config.treefmt.build.wrapper
               jdk
               pkgs.gradle_9
-              update-deps
             ];
             shellHook = ''
               # Install the pre-commit hooks
               ${config.pre-commit.installationScript}
 
               export JAVA_HOME=${jdk}
-              # For IntelliJ to pick up the JDK path easily if needed
+              # For IDEs to pick up the JDK path easily if needed
               export GRADLE_OPTS="-Dorg.gradle.java.home=${jdk}"
 
               echo "[...] Loading Nannuo Bot Dev Environment"
@@ -199,6 +147,24 @@
                 echo "[OK] Gradle Wrapper is up to date ($GRADLE_VERSION)"
               fi
             '';
+          };
+
+          apps.vps-redeploy = {
+            type = "app";
+            program =
+              let
+                script = pkgs.writeShellApplication {
+                  name = "vps-redeploy";
+                  runtimeInputs = with pkgs; [
+                    age
+                    openssl
+                    curl
+                    gnused
+                  ];
+                  text = builtins.readFile ./scripts/redeploy.sh;
+                };
+              in
+              "${script}/bin/vps-redeploy";
           };
         };
 
