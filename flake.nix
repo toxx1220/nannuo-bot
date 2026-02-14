@@ -12,6 +12,10 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -44,7 +48,10 @@
     in
 
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ inputs.git-hooks-nix.flakeModule ];
+      imports = [
+        inputs.git-hooks-nix.flakeModule
+        inputs.treefmt-nix.flakeModule
+      ];
 
       systems = [
         "x86_64-linux"
@@ -172,8 +179,10 @@
           };
 
           # --- Dev Shell ---
+          treefmt.config = import ./treefmt.nix;
           devShells.default = pkgs.mkShell {
             packages = [
+              config.treefmt.build.wrapper
               jdk
               pkgs.gradle_9
               update-deps
