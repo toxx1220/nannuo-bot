@@ -4,9 +4,3 @@ builds:
     include:
         - packages.aarch64-linux.default
         - packages.x86_64-linux.default
-
-actions:
-    - name: vps-redeploy
-      on: push
-      run: vps-redeploy
-      withRepoContents: true
