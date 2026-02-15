@@ -91,7 +91,7 @@ jobs:
             - name: Trigger VPS Update
               if: success()
               env:
-                  VPS_DISPATCH_TOKEN: ${{ secrets.VPS_DISPATCH_TOKEN }}
+                  VPS_DISPATCH_TOKEN: ${{ secrets.NIX_VPS_DISPATCH_TOKEN }}
               run: |
                   curl -L \
                     -X POST \
