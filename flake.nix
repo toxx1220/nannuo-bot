@@ -151,20 +151,6 @@
         };
 
       flake = {
-        nixosConfigurations = {
-          # --- Google Cloud Compute flake, currently in production. To be replaced. ---
-          gce-x86 = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            modules = [
-              ./deployments/common.nix
-              ./deployments/gce.nix
-              self.nixosModules.default
-              sops-nix.nixosModules.sops
-              disko.nixosModules.disko
-            ];
-          };
-        };
-
         nixosModules.default = import ./deployments/module.nix self;
       };
     };
