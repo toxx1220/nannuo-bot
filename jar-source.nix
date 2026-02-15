@@ -1,6 +1,6 @@
 # Auto-updated by GitHub Actions on each tagged release.
 # To update manually, run: nix run .#update-jar -- <tag>
 {
-  url = "https://github.com/toxx1220/nannuo-bot/releases/download/v1.1.1/nannuo-bot.jar";
+  url = "https://github.com/toxx1220/nannuo-bot/releases/download/v1.1.2/nannuo-bot.jar";
   hash = "sha256-/7ENNWKHmipkzMJ8hVDYEgPgbmdUI4ItVNewULsMMeI=";
 }
