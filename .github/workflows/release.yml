@@ -47,11 +47,12 @@ jobs:
                   SRI=$(openssl dgst -sha256 -binary "${{ steps.jar.outputs.path }}" | base64 -w0)
                   echo "sri=sha256-${SRI}" >> "$GITHUB_OUTPUT"
 
-            - name: Create GitHub Release
+            - name: Create Pre-release
               uses: softprops/action-gh-release@v2
               with:
                   files: ${{ steps.jar.outputs.path }}
                   generate_release_notes: true
+                  prerelease: true
 
             - name: Update jar-source.nix and push to main
               id: push
@@ -91,6 +92,16 @@ jobs:
                   check-regexp: "(packages|Evaluate|All Garnix).*"
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
                   wait-interval: 10 # seconds
+
+            - name: Promote to Final Release
+              if: success()
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh release edit ${{ github.ref_name }} \
+                      --prerelease=false \
+                      --latest
+                  echo "✓ Release ${{ github.ref_name }} promoted to final"
 
             - name: Trigger VPS Update
               if: success()
