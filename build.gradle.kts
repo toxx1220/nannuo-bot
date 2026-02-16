@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.kord:kord-core:0.13.1")
+    implementation("dev.kord:kord-core:0.17.0")
     implementation("org.slf4j:slf4j-simple:2.0.9")
 }
 
