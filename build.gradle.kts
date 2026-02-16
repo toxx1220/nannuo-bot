@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("com.gradleup.shadow") version "8.3.5"
+    id("com.gradleup.shadow") version "9.3.1"
     application
     idea
 }
@@ -24,8 +24,8 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.kord:kord-core:0.13.1")
-    implementation("org.slf4j:slf4j-simple:2.0.9")
+    implementation("dev.kord:kord-core:0.17.0")
+    implementation("org.slf4j:slf4j-simple:2.0.17")
 }
 
 kotlin {
@@ -34,6 +34,7 @@ kotlin {
     compilerOptions {
         // Enable the new experimental checker mentioned in release notes
         freeCompilerArgs.add("-Xreturn-value-checker=check")
+        optIn.add("kotlin.time.ExperimentalTime") // Required: https://github.com/kordlib/kord/releases/tag/0.17.0
     }
 }
 
