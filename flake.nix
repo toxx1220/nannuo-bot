@@ -108,9 +108,7 @@
 
         in
         {
-          formatter = pkgs.nixfmt-rfc-style;
-
-          pre-commit.settings.hooks.nixfmt-rfc-style.enable = true;
+          pre-commit.settings.hooks.nixfmt.enable = true;
 
           packages = {
             default = nannuo-bot;
@@ -125,6 +123,8 @@
               config.treefmt.build.wrapper
               jdk
               pkgs.gradle_9
+              pkgs.ktlint
+              pkgs.nil
             ];
             shellHook = ''
               # Install the pre-commit hooks

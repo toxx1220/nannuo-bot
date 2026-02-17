@@ -1,0 +1,18 @@
+{
+    "lsp": {
+        "kotlin-lsp": {
+            "binary": {
+                "env": {
+                    "JAVA_HOME": "/Users/noah/Projects/nannuo-bot-v1/.jdk"
+                }
+            }
+        },
+        "jdtls": {
+            "binary": {
+                "env": {
+                    "JAVA_HOME": "/Users/noah/Projects/nannuo-bot-v1/.jdk"
+                }
+            }
+        }
+    }
+}

@@ -6,12 +6,14 @@
   programs.shfmt.enable = true;
 
   settings.excludes = [
+    "settings.json"
     "secrets.yaml"
     "*.md"
     "flake.lock"
   ];
 
   programs.prettier.excludes = [
+    "settings.json"
     "secrets.yaml"
     "*.md"
   ];
