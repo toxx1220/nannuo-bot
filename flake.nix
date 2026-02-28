@@ -6,12 +6,6 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     git-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
-    sops-nix.url = "github:Mic92/sops-nix";
-    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -23,30 +17,25 @@
       self,
       nixpkgs,
       flake-parts,
-      sops-nix,
-      disko,
       ...
     }:
     let
       lib = nixpkgs.lib;
 
-      # Reading Java version and project name from gradle.properties
-      gradlePropsLines = lib.strings.splitString "\n" (builtins.readFile ./gradle.properties);
-
+      # Source of truth for metadata
+      gradleProps = builtins.readFile ./gradle.properties;
       # Helper to extract a value from gradle.properties
       getProp =
         prop:
-        let
-          line = lib.findFirst (l: lib.hasPrefix "${prop}=" l) null gradlePropsLines;
-        in
-        if line != null then lib.removePrefix "${prop}=" line else null;
+        lib.removePrefix "${prop}=" (
+          lib.findFirst (l: lib.hasPrefix "${prop}=" l) null (lib.splitString "\n" gradleProps)
+        );
 
       javaVersion = getProp "javaVersion";
       pname = getProp "rootProjectName";
-
       jarSource = import ./jar-source.nix;
 
-      projectVersion = jarSource.version or "dev-${self.shortRev or "dirty"}";
+      projectVersion = jarSource.version;
     in
 
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -66,54 +55,38 @@
         { config, pkgs, ... }:
         let
           jdk = pkgs."jdk${javaVersion}";
-          jdk_headless = pkgs."jdk${javaVersion}_headless";
+          jre = pkgs."jdk${javaVersion}_headless";
 
-          # Fetch the pre-built JAR from GitHub Releases
-          jar = pkgs.fetchurl {
-            url = jarSource.url;
-            hash = jarSource.hash;
-          };
-
-          # --- Main Package ---
-          # Wraps the pre-built JAR with a headless JDK runtime.
-          nannuo-bot = pkgs.stdenv.mkDerivation {
-            inherit pname;
-            version = projectVersion;
-
-            # No source to unpack — use the pre-built JAR directly
-            dontUnpack = true;
-
-            nativeBuildInputs = [ pkgs.makeWrapper ];
-
-            installPhase = ''
-              mkdir -p $out/share/java $out/bin
-              cp ${jar} $out/share/java/${pname}.jar
-
-              makeWrapper ${jdk_headless}/bin/java $out/bin/${pname} \
-                --add-flags "-jar $out/share/java/${pname}.jar"
-            '';
-          };
-
-          # --- Update JAR Hash Script ---
-          update-jar = pkgs.writeShellApplication {
-            name = "update-jar";
-            runtimeInputs = [
-              pkgs.nix
-              pkgs.coreutils
-              pkgs.git
-              pkgs.jq
-            ];
-            text = builtins.readFile ./scripts/update-jar.sh;
-          };
-
+          # Main Package: Wraps the pre-built JAR
+          nannuo-bot =
+            pkgs.runCommand pname
+              {
+                inherit pname;
+                version = projectVersion;
+                nativeBuildInputs = [ pkgs.makeWrapper ];
+              }
+              ''
+                mkdir -p $out/share/java $out/bin
+                cp ${pkgs.fetchurl { inherit (jarSource) url hash; }} $out/share/java/$pname.jar
+                makeWrapper ${jre}/bin/java $out/bin/$pname --add-flags "-jar $out/share/java/$pname.jar"
+              '';
         in
         {
           pre-commit.settings.hooks.nixfmt.enable = true;
 
           packages = {
+            inherit nannuo-bot;
             default = nannuo-bot;
-            nannuo-bot = nannuo-bot;
-            update-jar = update-jar;
+            update-jar = pkgs.writeShellApplication {
+              name = "update-jar";
+              runtimeInputs = with pkgs; [
+                nix
+                coreutils
+                git
+                jq
+              ];
+              text = builtins.readFile ./scripts/update-jar.sh;
+            };
           };
 
           # --- Dev Shell ---
