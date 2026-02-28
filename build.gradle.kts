@@ -17,7 +17,7 @@ val javaVersion: String by project
 val projectGroup: String by project
 
 group = projectGroup
-version = projectVersion
+version = if (project.version != "unspecified") project.version else projectVersion
 
 repositories {
     mavenCentral()

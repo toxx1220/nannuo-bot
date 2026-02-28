@@ -32,6 +32,7 @@ cat >jar-source.nix <<EOF
 # Auto-updated by GitHub Actions on each tagged release.
 # To update manually, run: nix run .#update-jar -- <tag>
 {
+  version = "${TAG}";
   url = "${URL}";
   hash = "${HASH}";
 }

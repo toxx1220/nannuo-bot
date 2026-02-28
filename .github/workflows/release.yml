@@ -30,7 +30,7 @@ jobs:
               uses: gradle/actions/setup-gradle@v5
 
             - name: Build fat JAR
-              run: ./gradlew shadowJar --no-daemon
+              run: ./gradlew shadowJar -Pversion=${{ github.ref_name }} --no-daemon
 
             - name: Prepare release artifact
               id: jar
@@ -38,7 +38,7 @@ jobs:
                   # Rename to a stable name so the download URL is predictable
                   JAR_SRC=$(ls build/libs/*-all.jar)
                   JAR_DEST="build/libs/nannuo-bot.jar"
-                  cp "$JAR_SRC" "$JAR_DEST"
+                  mv "$JAR_SRC" "$JAR_DEST"
                   echo "path=$JAR_DEST" >> "$GITHUB_OUTPUT"
 
             - name: Compute SRI hash
@@ -69,6 +69,7 @@ jobs:
                   # Auto-updated by GitHub Actions on each tagged release.
                   # To update manually, run: nix run .#update-jar -- <tag>
                   {
+                    version = "${TAG}";
                     url = "https://github.com/toxx1220/nannuo-bot/releases/download/${TAG}/nannuo-bot.jar";
                     hash = "${HASH}";
                   }

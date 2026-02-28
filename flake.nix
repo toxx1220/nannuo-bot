@@ -47,6 +47,9 @@
       pname = getProp "rootProjectName";
 
       jarSource = import ./jar-source.nix;
+
+      # Single source of truth for versioning
+      projectVersion = jarSource.version or "dev-${self.shortRev or "dirty"}";
     in
 
     flake-parts.lib.mkFlake { inherit inputs; } {
