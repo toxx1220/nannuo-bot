@@ -30,8 +30,7 @@
     let
       lib = nixpkgs.lib;
 
-      # --- Source of Truth Extraction ---
-      # We read from gradle.properties
+      # Reading Java version and project name from gradle.properties
       gradlePropsLines = lib.strings.splitString "\n" (builtins.readFile ./gradle.properties);
 
       # Helper to extract a value from gradle.properties
@@ -43,12 +42,10 @@
         if line != null then lib.removePrefix "${prop}=" line else null;
 
       javaVersion = getProp "javaVersion";
-      projectVersion = getProp "projectVersion";
       pname = getProp "rootProjectName";
 
       jarSource = import ./jar-source.nix;
 
-      # Single source of truth for versioning
       projectVersion = jarSource.version or "dev-${self.shortRev or "dirty"}";
     in
 
