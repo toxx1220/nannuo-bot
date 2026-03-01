@@ -34,7 +34,7 @@ Or build and run the fat jar:
 
 ```bash
 gradle shadowJar
-java -jar build/libs/nannuo-bot-*-all.jar
+java -jar build/libs/nannuo-bot-* .jar
 ```
 
 ## IDE Setup
