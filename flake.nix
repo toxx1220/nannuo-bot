@@ -22,16 +22,22 @@
     let
       lib = nixpkgs.lib;
 
-      # Source of truth for metadata
+      # Contains Java Version and Metadata
       gradleProps = builtins.readFile ./gradle.properties;
+
       # Helper to extract a value from gradle.properties
       getProp =
         prop:
-        lib.removePrefix "${prop}=" (
-          lib.findFirst (l: lib.hasPrefix "${prop}=" l) null (lib.splitString "\n" gradleProps)
-        );
+        let
+          # Find the first line that starts with "propertyName="
+          matchingLine = lib.findFirst (l: lib.hasPrefix "${prop}=" l) null (
+            lib.splitString "\n" gradleProps
+          );
+        in
+        # Strip the "propertyName=" prefix to extract the value
+        lib.removePrefix "${prop}=" matchingLine;
 
-      javaVersion = getProp "javaVersion";
+      javaVersion = getProp "javaVersion"; # Find property with name javaVersion
       pname = getProp "rootProjectName";
       jarSource = import ./jar-source.nix;
 
