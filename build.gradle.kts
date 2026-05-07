@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.21"
     id("com.gradleup.shadow") version "9.3.1"
     application
     idea
@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.kord:kord-core:0.17.0")
+    implementation("dev.kord:kord-core:0.18.1")
     implementation("org.slf4j:slf4j-simple:2.0.17")
 }
 
