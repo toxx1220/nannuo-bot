@@ -8,13 +8,17 @@
   settings.excludes = [
     "settings.json"
     "secrets.yaml"
+    ".sops.yaml"
     "*.md"
     "flake.lock"
+    "dump.sql"
   ];
 
   programs.prettier.excludes = [
     "settings.json"
     "secrets.yaml"
+    ".sops.yaml"
     "*.md"
+    "dump.sql"
   ];
 }
