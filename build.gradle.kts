@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     implementation("dev.kord:kord-core:0.18.1")
-    implementation("org.slf4j:slf4j-simple:2.0.17")
+    implementation("org.slf4j:slf4j-simple:2.0.18")
 }
 
 kotlin {
