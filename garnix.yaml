@@ -1,6 +1,0 @@
-builds:
-    branches:
-        - main
-    include:
-        - packages.aarch64-linux.default
-        - packages.x86_64-linux.default
