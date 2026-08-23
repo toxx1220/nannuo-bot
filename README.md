@@ -40,6 +40,7 @@ java -jar build/libs/nannuo-bot-* .jar
 ## IDE Setup
 
 The devShell automatically syncs the nix jdk folder to `.jdk` to be used by IDE/Gradle/... Gradle Wrapper is also managed by [flake.nix](flake.nix).
+Gradle is updated to the latest nixpkgs version by running `nix flake update` and then `nix develop`.
 
 ## Nix Build
 
