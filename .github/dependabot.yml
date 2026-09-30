@@ -1,13 +1,14 @@
 version: 2
 updates:
-    - package-ecosystem: "gradle" # See documentation for possible values
-      directory: "/" # Location of package manifests
+    - package-ecosystem: "gradle"
+      directory: "/"
       schedule:
           interval: "weekly"
       groups:
-          kotlin-plugins:
+          kotlin-and-kotlinx:
               patterns:
-                  - "org.jetbrains.kotlin:*"
+                  - "org.jetbrains.kotlin*"
+                  - "org.jetbrains.kotlinx*"
               update-types:
                   - "minor"
                   - "patch"

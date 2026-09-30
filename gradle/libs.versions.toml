@@ -1,0 +1,13 @@
+[versions]
+kotlin = "2.4.20"
+shadow = "9.6.1"
+kord = "0.18.1"
+slf4j = "2.0.20"
+
+[libraries]
+kord-core = { module = "dev.kord:kord-core", version.ref = "kord" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
