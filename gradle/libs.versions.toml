@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.4.20"
 shadow = "9.6.1"
-kord = "0.18.1"
+kord = "0.19.0-SNAPSHOT"
 slf4j = "2.0.20"
 
 [libraries]

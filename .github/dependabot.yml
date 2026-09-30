@@ -5,10 +5,9 @@ updates:
       schedule:
           interval: "weekly"
       groups:
-          kotlin-and-kotlinx:
+          kotlin-plugins:
               patterns:
                   - "org.jetbrains.kotlin*"
-                  - "org.jetbrains.kotlinx*"
               update-types:
                   - "minor"
                   - "patch"

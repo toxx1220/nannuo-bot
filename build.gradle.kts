@@ -21,6 +21,8 @@ version = if (project.version != "unspecified") project.version else projectVers
 
 repositories {
     mavenCentral()
+    // necessary for snapshot that fixes Cannot parse ULong from null #1075 https://github.com/kordlib/kord/issues/1075#issuecomment-5729187971
+    maven("https://snapshots.kord.dev")
 }
 
 dependencies {
